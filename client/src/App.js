@@ -71,8 +71,8 @@ class App extends Component {
               {this.state.customers ? this.state.customers.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>{c.id}</TableCell>
-                  <TableCell><img src={c.image} alt={c.name} /></TableCell>
-                  <TableCell>{c.name}</TableCell>
+                  <TableCell><img src={c.image} alt={c.NAME} /></TableCell>
+                  <TableCell>{c.NAME}</TableCell>
                   <TableCell>{c.birthday}</TableCell>
                   <TableCell>{c.gender}</TableCell>
                   <TableCell>{c.job}</TableCell>
