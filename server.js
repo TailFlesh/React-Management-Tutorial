@@ -31,7 +31,7 @@ app.get('/api/customers', async (req, res) => {
         conn = await pool.getConnection();
 
         // 쿼리 실행
-        const rows = await conn.query("SELECT * FROM CUSTOMER");
+        const rows = await conn.query("SELECT * FROM CUSTOMER WHERE isDeleted = 0");
 
         // 결과를 클라이언트로 전송
         res.send(rows);
@@ -53,7 +53,7 @@ app.post('/api/customers', upload.single('image'), async (req, res) => {
     console.log(req.body);  // 전달된 폼 데이터 로그
     console.log(req.file);  // 파일 정보 로그
 
-    let sql = 'INSERT INTO CUSTOMER VALUES (null, ?, ?, ?, ?, ?)';
+    let sql = 'INSERT INTO CUSTOMER VALUES (null, ?, ?, ?, ?, ?, now(), 0)';
     let image = '/image/' + req.file.filename;
     let name = req.body.name;
     let birthday = req.body.birthday;       
@@ -63,16 +63,13 @@ app.post('/api/customers', upload.single('image'), async (req, res) => {
 
     let conn;
     try {
-        // 풀에서 연결 가져오기
-        conn = await pool.getConnection();
-        // 쿼리 실행
-        const result = await conn.query(sql, params);
+        conn = await pool.getConnection(); // 풀에서 연결 가져오기
+        const result = await conn.query(sql, params);// 쿼리 실행
         // BigInt 값이 있는지 확인하고 문자열로 변환
         const resultStringified = JSON.parse(JSON.stringify(result, (key, value) => 
             typeof value === 'bigint' ? value.toString() : value
         ));
-        // 결과를 클라이언트로 전송
-        res.json(resultStringified);
+        res.json(resultStringified); // 결과를 클라이언트로 전송
     } catch (err) {
         // 오류 발생 시 로그 출력 및 오류 응답 전송
         console.error('쿼리 실행 중 오류 발생:', err);
@@ -81,5 +78,27 @@ app.post('/api/customers', upload.single('image'), async (req, res) => {
         if (conn) conn.release(); // 항상 연결을 풀로 반환
     }
 });
+
+app.delete('/api/customers/:id', async (req, res) => {
+    let sql = 'UPDATE CUSTOMER SET isDeleted = 1 WHERE id = ?';
+    let params = [req.params.id];
+
+    let conn;
+    try {
+        conn = await pool.getConnection(); // 풀에서 연결 가져오기
+        const result = await conn.query(sql, params); // 쿼리 실행
+        // BigInt 값이 있는지 확인하고 문자열로 변환
+        const resultStringified = JSON.parse(JSON.stringify(result, (key, value) => 
+            typeof value === 'bigint' ? value.toString() : value
+        ));
+        res.send(resultStringified); // 결과를 클라이언트에 응답
+    } catch (err) {
+        console.error('쿼리 실행 중 오류 발생:', err); // 오류 로그
+        res.status(500).send('내부 서버 오류'); // 오류 응답
+    } finally {
+        if (conn) conn.release(); // 풀로 연결 반환
+    }
+});
+
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
