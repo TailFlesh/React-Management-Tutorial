@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import Customer from './components/Customer';
+import CustomerAdd from './components/CustomerAdd';
 import { CircularProgress, Paper, Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
 import { styled } from '@mui/system';
 
@@ -21,11 +22,24 @@ const ProgressWrapper = styled('div')(({ theme }) => ({
 
 class App extends Component {
 
-  state = {
-    customers: "",  // 고객 정보 초기 상태
-    completed: 0  // Progress Bar의 초기 상태
+  constructor(props){
+    super(props);
+    this.state = {
+      customers : '',
+      completed: 0
+    }
   }
 
+  stateRefresh = () => {
+    this.setState({
+      customers: '',
+      completed: 0
+    });
+    this.callApi()
+      .then(res => this.setState({ customers: res }))
+      .catch(err => console.log(err));
+  }
+  
   // 컴포넌트가 마운트될 때 실행
   componentDidMount() {
     this.timer = setInterval(this.progress, 20);  // 타이머 설정
@@ -89,6 +103,7 @@ class App extends Component {
             </TableBody>
           </StyledTable>
         </Paper>
+        <CustomerAdd stateRefresh={this.stateRefresh}/>
       </Root>
     );
   }
